@@ -614,6 +614,7 @@ function renderDashboard() {
     </div>
     <div class="card" style="margin-bottom:1.5rem">
       <div class="section-title" style="margin-bottom:1rem;font-size:0.95rem">Entrate vs Uscite — ultimi 6 mesi</div>
+      <div id="dash-chart-total" style="min-height:1.4rem;text-align:center;font-size:0.85rem;font-weight:600;margin-bottom:.5rem;color:var(--color-text-muted)"></div>
       <div style="position:relative;height:220px"><canvas id="dash-bar-chart"></canvas></div>
     </div>
     <div class="section-header">
@@ -644,7 +645,22 @@ function renderDashboard() {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: true, labels: { color: '#7b7c9e', font: { family: 'Inter, sans-serif', size: 12 }, boxWidth: 12, padding: 16 } },
+            legend: { display: true, labels: { color: '#7b7c9e', font: { family: 'Inter, sans-serif', size: 12 }, boxWidth: 12, padding: 16 },
+              onClick: function(e, legendItem, legend) {
+                const _ds = [chartIncome, chartExpense, chartDiff];
+                const _lb = ['Entrate', 'Uscite', 'Differenza'];
+                const _cl = ['#00d97e', '#ff4d6d', '#f59e0b'];
+                const idx = legendItem.datasetIndex;
+                const total = _ds[idx].reduce(function(s, v) { return s + v; }, 0);
+                const sign = (idx === 2 && total >= 0) ? '+' : '';
+                const el = document.getElementById('dash-chart-total');
+                if (el) {
+                  el.style.color = _cl[idx];
+                  el.textContent = 'Totale ' + _lb[idx] + ' (6 mesi): ' + sign + currency + ' ' + total.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                const ci = legend.chart;
+                if (ci.isDatasetVisible(idx)) { ci.hide(idx); legendItem.hidden = true; } else { ci.show(idx); legendItem.hidden = false; }
+              } },
             tooltip: {
               backgroundColor: '#1a1d27',
               borderColor: 'rgba(255,255,255,0.1)',
