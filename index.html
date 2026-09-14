@@ -647,19 +647,24 @@ function renderDashboard() {
           plugins: {
             legend: { display: true, labels: { color: '#7b7c9e', font: { family: 'Inter, sans-serif', size: 12 }, boxWidth: 12, padding: 16 },
               onClick: function(e, legendItem, legend) {
-                const _ds = [chartIncome, chartExpense, chartDiff];
-                const _lb = ['Entrate', 'Uscite', 'Differenza'];
-                const _cl = ['#00d97e', '#ff4d6d', '#f59e0b'];
-                const idx = legendItem.datasetIndex;
-                const total = _ds[idx].reduce(function(s, v) { return s + v; }, 0);
-                const sign = (idx === 2 && total >= 0) ? '+' : '';
-                const el = document.getElementById('dash-chart-total');
-                if (el) {
-                  el.style.color = _cl[idx];
-                  el.textContent = 'Totale ' + _lb[idx] + ' (6 mesi): ' + sign + currency + ' ' + total.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
                 const ci = legend.chart;
+                const idx = legendItem.datasetIndex;
                 if (ci.isDatasetVisible(idx)) { ci.hide(idx); legendItem.hidden = true; } else { ci.show(idx); legendItem.hidden = false; }
+                const visible = [0, 1, 2].filter(function(i) { return ci.isDatasetVisible(i); });
+                const el = document.getElementById('dash-chart-total');
+                if (!el) return;
+                if (visible.length === 1) {
+                  const vi = visible[0];
+                  const _ds = [chartIncome, chartExpense, chartDiff];
+                  const _lb = ['Entrate', 'Uscite', 'Differenza'];
+                  const _cl = ['#00d97e', '#ff4d6d', '#f59e0b'];
+                  const total = _ds[vi].reduce(function(s, v) { return s + v; }, 0);
+                  const sign = (vi === 2 && total >= 0) ? '+' : '';
+                  el.style.color = _cl[vi];
+                  el.textContent = 'Totale ' + _lb[vi] + ' (6 mesi): ' + sign + currency + ' ' + total.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                  el.textContent = '';
+                }
               } },
             tooltip: {
               backgroundColor: '#1a1d27',
