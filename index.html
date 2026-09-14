@@ -437,12 +437,6 @@ const _DEFAULT_CATS = [
 const _OLD_CAT_NAMES = new Set(['Alimentari','Trasporti','Casa','Salute','Intrattenimento','Abbigliamento','Istruzione','Ristoranti','Altro','Stipendio','Svago']);
 
 function initSeed() {
-  if (!localStorage.getItem(STORAGE.accounts)) {
-    saveAccounts([
-      { id: crypto.randomUUID(), name: 'Conto Principale', type: 'corrente', initial_balance_cents: 0, color: '#6c63ff' },
-      { id: crypto.randomUUID(), name: 'Risparmi', type: 'risparmio', initial_balance_cents: 0, color: '#00d97e' },
-    ]);
-  }
   if (!localStorage.getItem(STORAGE.categories)) {
     saveCategories(_DEFAULT_CATS.map(([name, color]) => ({ id: crypto.randomUUID(), name, color })));
   } else {
@@ -1369,6 +1363,14 @@ function onHashChange() {
 
 window.addEventListener('hashchange', onHashChange);
 
+(function _removeSeedAccounts() {
+  const SEED = new Set(['Conto Principale', 'Risparmi']);
+  const accs = getAccounts().filter(a => SEED.has(a.name));
+  if (!accs.length) return;
+  const txs = getTransactions();
+  const removeIds = new Set(accs.filter(a => !txs.some(t => t.account_id === a.id || t.to_account_id === a.id)).map(a => a.id));
+  if (removeIds.size) saveAccounts(getAccounts().filter(a => !removeIds.has(a.id)));
+})();
 initSeed();
 onHashChange();
 
