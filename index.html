@@ -198,6 +198,34 @@ MCC.calcolaTutti = function(){
   MCC.setImpegni(imp);
   if(!localStorage.getItem('mcc.parametri')) MCC.setParametri({ soglia_minima_liquidita:10000, rata_mutuo_mensile:920, fondo_sicurezza:5000, tolleranza_giallo:0.10, nomi:{bp:'BP',libretto:'Libretto',ing:'ING'} });
 })();
+MCC._exportBackup = function(){
+  var data = { saldi:MCC.getSaldi(), impegni:MCC.getImpegni(), parametri:MCC.getParametri(), exported:new Date().toISOString() };
+  var blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'moneto_light_backup.json'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+};
+
+MCC._importBackup = function(onDone){
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = function(e){
+    var f = e.target.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(ev){
+      try{
+        var d = JSON.parse(ev.target.result);
+        if(d.saldi)    MCC.setSaldi(d.saldi);
+        if(d.impegni)  MCC.setImpegni(d.impegni);
+        if(d.parametri) MCC.setParametri(d.parametri);
+        onDone && onDone();
+      } catch(ex){ alert('File non valido o corrotto.'); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+};
 MCC.renderDashboard = function(){
   var el = document.getElementById('view-dashboard');
   var tutti = MCC.calcolaTutti();
@@ -298,6 +326,7 @@ MCC.renderInserisci = function(editMese){
       parseFloat(document.getElementById('ins-mut').value)||0,
       parseFloat(document.getElementById('ins-ric').value)||0,
       parseFloat(document.getElementById('ins-str').value)||0);
+    MCC._exportBackup();
     MCC.showView('storico');
   });
 };
@@ -388,7 +417,15 @@ MCC.renderStorico = function(){
         '<div class="form-group"><label class="form-label">Fondo sicurezza (\u20AC)</label><input id="pr-fondo" type="number" step="100" class="form-control" value="'+pr.fondo_sicurezza+'"></div>'+
       '</div>'+
       '<button id="pr-save" class="btn-primary">Salva parametri</button>'+
+      '<div style="display:flex;gap:.6rem;margin-top:.75rem">'+
+      '<button id="pr-export" class="btn-primary" style="background:rgba(0,201,184,.18);color:var(--color-accent);font-size:14px">Esporta backup</button>'+
+      '<button id="pr-import" class="btn-primary" style="background:rgba(255,255,255,.06);color:var(--color-text-muted);font-size:14px">Importa backup</button>'+
+      '</div>'+
       '<div id="pr-msg" style="text-align:center;margin-top:.75rem;font-size:13px;color:var(--color-income);height:1.2em"></div>';
+    document.getElementById('pr-export').addEventListener('click', function(){ MCC._exportBackup(); });
+    document.getElementById('pr-import').addEventListener('click', function(){
+      MCC._importBackup(function(){ MCC.renderParametri(); MCC.showView('dashboard'); });
+    });
     document.getElementById('pr-save').addEventListener('click', function(){
       MCC.setParametri({
         soglia_minima_liquidita: parseFloat(document.getElementById('pr-soglia').value)||10000,
