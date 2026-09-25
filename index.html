@@ -176,24 +176,24 @@ MCC.calcolaTutti = function(){
 
 MCC._loadSeedData = function(){
   var s = [
-    {mese:'2025-01',bp:28100,libretto:2684,ing:2373,note:''},
-    {mese:'2025-02',bp:28337,libretto:2684,ing:4373,note:''},
-    {mese:'2025-03',bp:28337,libretto:1484.91,ing:4100,note:''},
-    {mese:'2025-04',bp:28565,libretto:1489.54,ing:1990,note:''},
-    {mese:'2025-05',bp:28692,libretto:1512.58,ing:490,note:''},
-    {mese:'2025-06',bp:29000,libretto:1520.65,ing:316,note:''},
-    {mese:'2025-07',bp:28728,libretto:1620.65,ing:316,note:''},
-    {mese:'2025-08',bp:24904,libretto:1620.65,ing:1200,note:''},
-    {mese:'2025-09',bp:14570,libretto:520,ing:2470,note:'Acquisto Casa'},
-    {mese:'2025-10',bp:13600,libretto:550,ing:3300,note:''},
-    {mese:'2025-11',bp:12650,libretto:580,ing:2050,note:'Prima rata mutuo'},
-    {mese:'2025-12',bp:12900,libretto:610,ing:1839,note:''},
-    {mese:'2026-01',bp:13000,libretto:642,ing:1570,note:''},
-    {mese:'2026-02',bp:12500,libretto:672,ing:1570,note:''},
-    {mese:'2026-03',bp:12830,libretto:702,ing:1620,note:''}
+    {mese:'2025-07',bp:28100,libretto:2684,ing:2373,note:''},
+    {mese:'2025-08',bp:28337,libretto:2684,ing:4373,note:''},
+    {mese:'2025-09',bp:28337,libretto:1484.91,ing:4100,note:''},
+    {mese:'2025-10',bp:28565,libretto:1489.54,ing:1990,note:''},
+    {mese:'2025-11',bp:28692,libretto:1512.58,ing:490,note:''},
+    {mese:'2025-12',bp:29000,libretto:1520.65,ing:316,note:''},
+    {mese:'2026-01',bp:28728,libretto:1620.65,ing:316,note:''},
+    {mese:'2026-02',bp:24904,libretto:1620.65,ing:1200,note:''},
+    {mese:'2026-03',bp:14570,libretto:520,ing:2470,note:'Acquisto Casa'},
+    {mese:'2026-04',bp:13600,libretto:550,ing:3300,note:''},
+    {mese:'2026-05',bp:12650,libretto:580,ing:2050,note:'Prima rata mutuo'},
+    {mese:'2026-06',bp:12900,libretto:610,ing:1839,note:''},
+    {mese:'2026-07',bp:13000,libretto:642,ing:1570,note:''},
+    {mese:'2026-08',bp:12500,libretto:672,ing:1570,note:''},
+    {mese:'2026-09',bp:12830,libretto:702,ing:1620,note:''}
   ];
   MCC.setSaldi(s);
-  var imp = s.map(function(x){ return { mese:x.mese, rata_mutuo:x.mese>='2025-11'?920:0, spese_ricorrenti:0, spese_straordinarie:0 }; });
+  var imp = s.map(function(x){ return { mese:x.mese, rata_mutuo:x.mese>='2026-05'?920:0, spese_ricorrenti:0, spese_straordinarie:0 }; });
   MCC.setImpegni(imp);
   if(!localStorage.getItem('mcc.parametri')) MCC.setParametri({ soglia_minima_liquidita:10000, rata_mutuo_mensile:920, fondo_sicurezza:5000, tolleranza_giallo:0.10, nomi:{bp:'BP',libretto:'Libretto',ing:'ING'} });
 };
