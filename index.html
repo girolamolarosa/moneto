@@ -174,8 +174,7 @@ MCC.calcolaTutti = function(){
   });
 };
 
-(function(){
-  if(MCC.getSaldi().length > 0) return;
+MCC._loadSeedData = function(){
   var s = [
     {mese:'2025-01',bp:28100,libretto:2684,ing:2373,note:''},
     {mese:'2025-02',bp:28337,libretto:2684,ing:4373,note:''},
@@ -197,7 +196,9 @@ MCC.calcolaTutti = function(){
   var imp = s.map(function(x){ return { mese:x.mese, rata_mutuo:x.mese>='2025-11'?920:0, spese_ricorrenti:0, spese_straordinarie:0 }; });
   MCC.setImpegni(imp);
   if(!localStorage.getItem('mcc.parametri')) MCC.setParametri({ soglia_minima_liquidita:10000, rata_mutuo_mensile:920, fondo_sicurezza:5000, tolleranza_giallo:0.10, nomi:{bp:'BP',libretto:'Libretto',ing:'ING'} });
-})();
+};
+// Prima apertura: carica seed solo se vuoto
+(function(){ if(MCC.getSaldi().length === 0) MCC._loadSeedData(); })();
 MCC._exportBackup = function(){
   var data = { saldi:MCC.getSaldi(), impegni:MCC.getImpegni(), parametri:MCC.getParametri(), exported:new Date().toISOString() };
   var blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
@@ -451,7 +452,7 @@ MCC.renderStorico = function(){
       '<button id="pr-export" class="btn-primary" style="background:rgba(0,201,184,.18);color:var(--color-accent);font-size:14px">Esporta backup</button>'+
       '<button id="pr-import" class="btn-primary" style="background:rgba(255,255,255,.06);color:var(--color-text-muted);font-size:14px">Importa backup</button>'+
       '</div>'+
-      '<div id="pr-msg" style="text-align:center;margin-top:.75rem;font-size:13px;color:var(--color-income);height:1.2em"></div>';
+      '<div id="pr-msg" style="text-align:center;margin-top:.75rem;font-size:13px;color:var(--color-income);height:1.2em"></div>;
     document.getElementById('pr-export').addEventListener('click', function(){ MCC._exportBackup(); });
     document.getElementById('pr-import').addEventListener('click', function(){
       MCC._importBackup(function(){ MCC.renderParametri(); MCC.showView('dashboard'); });
