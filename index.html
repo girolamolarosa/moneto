@@ -370,28 +370,58 @@ MCC.renderStorico = function(){
     var pr = MCC.getParametri();
     var nomi = pr.nomi||{bp:'BP',libretto:'Libretto',ing:'ING'};
     if(!tutti.length){ el.innerHTML='<div class="empty-msg">Nessun dato.</div>'; return; }
-    var labels = tutti.map(function(m){ return new Date(m.mese+'-01').toLocaleString('it-IT',{month:'short',year:'2-digit'}); });
+
+    var periods = [{l:'3M',n:3},{l:'6M',n:6},{l:'9M',n:9},{l:'12M',n:12},{l:'Max',n:0}];
+    var activePeriod = 0;
+
+    var pillsHtml = '<div style="display:flex;gap:5px;margin-bottom:1rem;flex-wrap:wrap">' +
+      periods.map(function(p,i){
+        return '<button class="graf-pill'+(i===periods.length-1?' active':'')+'" data-idx="'+i+'" style="padding:.3rem .75rem;border:none;border-radius:20px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;background:'+(i===periods.length-1?'var(--color-accent)':'rgba(255,255,255,.08)')+';color:'+(i===periods.length-1?'#fff':'var(--color-text-muted)')+'">'+p.l+'</button>';
+      }).join('')+
+    '</div>';
+
     el.innerHTML =
       '<div class="page-header"><div class="page-title">Grafici</div></div>'+
+      pillsHtml+
       '<div class="chart-wrap"><div class="chart-label">Totale conti nel tempo</div><div class="chart-container"><canvas id="cg-tot"></canvas></div></div>'+
       '<div class="chart-wrap"><div class="chart-label">Conti singoli</div><div class="chart-container"><canvas id="cg-conti"></canvas></div></div>'+
       '<div class="chart-wrap"><div class="chart-label">Variazione mensile</div><div class="chart-container"><canvas id="cg-var"></canvas></div></div>';
-    if(typeof window.Chart !== 'function') return;
-    requestAnimationFrame(function(){
-      _destroy('cg-tot');
-      var ctx=document.getElementById('cg-tot'); if(!ctx) return;
-      _charts['cg-tot']=new window.Chart(ctx,{ type:'line', data:{ labels:labels, datasets:[{ data:tutti.map(function(m){ return m.totale; }), borderColor:'#00c9b8', backgroundColor:'rgba(0,201,184,.1)', borderWidth:2.5, pointRadius:3, tension:.35, fill:true }] }, options:baseOpts });
-      _destroy('cg-conti');
-      var ctx2=document.getElementById('cg-conti'); if(!ctx2) return;
-      _charts['cg-conti']=new window.Chart(ctx2,{ type:'line', data:{ labels:labels, datasets:[
-        { label:nomi.bp,       data:tutti.map(function(m){ return m.bp; }),       borderColor:'#00c9b8', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 },
-        { label:nomi.libretto, data:tutti.map(function(m){ return m.libretto; }), borderColor:'#f59e0b', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 },
-        { label:nomi.ing,      data:tutti.map(function(m){ return m.ing; }),      borderColor:'#6c63ff', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 }
-      ] }, options:deepMerge(baseOpts,{ plugins:{ legend:{ display:true, labels:{ color:'#6b7a99', font:{size:11}, boxWidth:10, padding:12 } } } }) });
-      _destroy('cg-var');
-      var varData=tutti.map(function(m){ return m.var_totale; });
-      var ctx3=document.getElementById('cg-var'); if(!ctx3) return;
-      _charts['cg-var']=new window.Chart(ctx3,{ type:'bar', data:{ labels:labels, datasets:[{ data:varData, backgroundColor:varData.map(function(v){ return v===null?'rgba(255,255,255,.1)':v>=0?'rgba(0,217,126,.75)':'rgba(255,77,109,.75)'; }), borderRadius:4, borderSkipped:false }] }, options:deepMerge(baseOpts,{ barPercentage:.7, categoryPercentage:.8 }) });
+
+    function getSlice(n){ return n === 0 ? tutti : tutti.slice(-n); }
+
+    function drawCharts(slice){
+      if(typeof window.Chart !== 'function') return;
+      var labels = slice.map(function(m){ return new Date(m.mese+'-01').toLocaleString('it-IT',{month:'short',year:'2-digit'}); });
+      requestAnimationFrame(function(){
+        _destroy('cg-tot');
+        var ctx=document.getElementById('cg-tot'); if(!ctx) return;
+        _charts['cg-tot']=new window.Chart(ctx,{ type:'line', data:{ labels:labels, datasets:[{ data:slice.map(function(m){ return m.totale; }), borderColor:'#00c9b8', backgroundColor:'rgba(0,201,184,.1)', borderWidth:2.5, pointRadius:3, tension:.35, fill:true }] }, options:baseOpts });
+        _destroy('cg-conti');
+        var ctx2=document.getElementById('cg-conti'); if(!ctx2) return;
+        _charts['cg-conti']=new window.Chart(ctx2,{ type:'line', data:{ labels:labels, datasets:[
+          { label:nomi.bp,       data:slice.map(function(m){ return m.bp; }),       borderColor:'#00c9b8', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 },
+          { label:nomi.libretto, data:slice.map(function(m){ return m.libretto; }), borderColor:'#f59e0b', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 },
+          { label:nomi.ing,      data:slice.map(function(m){ return m.ing; }),      borderColor:'#6c63ff', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.35 }
+        ] }, options:deepMerge(baseOpts,{ plugins:{ legend:{ display:true, labels:{ color:'#6b7a99', font:{size:11}, boxWidth:10, padding:12 } } } }) });
+        _destroy('cg-var');
+        var varData=slice.map(function(m){ return m.var_totale; });
+        var ctx3=document.getElementById('cg-var'); if(!ctx3) return;
+        _charts['cg-var']=new window.Chart(ctx3,{ type:'bar', data:{ labels:labels, datasets:[{ data:varData, backgroundColor:varData.map(function(v){ return v===null?'rgba(255,255,255,.1)':v>=0?'rgba(0,217,126,.75)':'rgba(255,77,109,.75)'; }), borderRadius:4, borderSkipped:false }] }, options:deepMerge(baseOpts,{ barPercentage:.7, categoryPercentage:.8 }) });
+      });
+    }
+
+    activePeriod = periods.length - 1;
+    drawCharts(getSlice(periods[activePeriod].n));
+
+    el.querySelectorAll('.graf-pill').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        el.querySelectorAll('.graf-pill').forEach(function(b){
+          b.style.background='rgba(255,255,255,.08)'; b.style.color='var(--color-text-muted)'; b.classList.remove('active');
+        });
+        btn.style.background='var(--color-accent)'; btn.style.color='#fff'; btn.classList.add('active');
+        activePeriod = parseInt(btn.dataset.idx);
+        drawCharts(getSlice(periods[activePeriod].n));
+      });
     });
   };
 
